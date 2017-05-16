@@ -1,0 +1,27 @@
+fileFormatVersion: 2
+guid: 5ed5e29438fa20947ac2cb8a0a1586b5
+timeCreated: 1494081900
+licenseType: Free
+PluginImporter:
+  serializedVersion: 1
+  iconMap:
+    GGL.GizmosGL: {fileID: 2800000, guid: 1b52d4b8fdaf58a4182755036fa4cc6f, type: 3}
+  executionOrder:
+    GGL.GizmosGL: 100
+  isPreloaded: 0
+  isOverridable: 0
+  platformData:
+    Any:
+      enabled: 1
+      settings: {}
+    Editor:
+      enabled: 0
+      settings:
+        DefaultValueInitialized: true
+    WindowsStoreApps:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+  userData:
+  assetBundleName:
+  assetBundleVariant:
