@@ -12,6 +12,7 @@ public class PiecePicker : MonoBehaviour
 
     private Piece selectedPiece;
     private CheckerBoard board;
+    private Vector3 hitPoint;
 
     // Use this for initialization
     void Start()
@@ -39,6 +40,7 @@ public class PiecePicker : MonoBehaviour
             // Raycast to only hit objects that aren't pieces
             if (Physics.Raycast(ray, out hit, rayDistance, ~selectionIgnoreLayer))
             {
+                hitPoint = hit.point;
                 // Obtain the hit point
                 GizmosGL.color = Color.red;
                 GizmosGL.AddSphere(hit.point, .5f);
@@ -46,11 +48,26 @@ public class PiecePicker : MonoBehaviour
                 Vector3 piecePos = hit.point + Vector3.up * pieceHeight;
                 selectedPiece.transform.position = piecePos;
             }
+
+            // Check if mouse button was released
+            if (Input.GetMouseButtonUp(0))
+            {
+                // Move piece to hit point
+                Piece piece = selectedPiece.GetComponent<Piece>();
+                board.PlacePiece(piece, hitPoint);
+                // Deselect piece
+                selectedPiece = null;
+            }
         }
     }
 
     void CheckSelection()
     {
+        // If ther eis already a selected piece
+        if (selectedPiece != null)
+        {
+            return;
+        }
         // Create a ray from camera mouse position to world
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         GizmosGL.AddLine(ray.origin, ray.origin + ray.direction * rayDistance);

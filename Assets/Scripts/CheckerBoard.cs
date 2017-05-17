@@ -1,9 +1,39 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Xml;
+using System.Xml.Serialization;
+using System.IO;
+
+[XmlRoot("CheckerBoardData")]
+public class CheckerBoardData
+{
+    [XmlArray("Pieces")]
+    [XmlArrayItem("Piece")]
+    public PieceData[] pieces;
+
+    public void Save(string path)
+    {
+        var serializer = new XmlSerializer(typeof(CheckerBoardData));
+        using (var stream = new FileStream(path, FileMode.Create))
+        {
+            serializer.Serialize(stream, this);
+        }
+    }
+
+    public static CheckerBoardData Load(string path)
+    {
+        var serializer = new XmlSerializer(typeof(CheckerBoardData));
+        using (var stream = new FileStream(path, FileMode.Open))
+        {
+            return serializer.Deserialize(stream) as CheckerBoardData;
+        }
+    }
+}
 
 public class CheckerBoard : MonoBehaviour
 {
+    public string fileName;
     public GameObject blackPiece;
     public GameObject whitePiece;
 
@@ -14,6 +44,7 @@ public class CheckerBoard : MonoBehaviour
     private int halfBoardX, halfBoardZ;
     private float pieceDiameter;
     private Vector3 bottomLeft;
+    private CheckerBoardData data;
 
     // Use this for initialization
     void Start()
@@ -24,7 +55,11 @@ public class CheckerBoard : MonoBehaviour
         pieceDiameter = pieceRadius * 2;
         bottomLeft = -Vector3.right * halfBoardX - Vector3.forward * halfBoardZ;
 
+        string path = Application.persistentDataPath + "/" + fileName;
+        //data = CheckerBoardData.Load(path);
         CreateGrid();
+        data = new CheckerBoardData();
+        data.Save(path);
     }
 
     void CreateGrid()
@@ -93,6 +128,55 @@ public class CheckerBoard : MonoBehaviour
 
         // Set pieces aray slot
         pieces[x, z] = piece;
+    }
+
+    public void PlacePiece(Piece piece, Vector3 position)
+    {
+        // Translate position to cordinate in array
+        float percentX = (position.x + halfBoardX) / boardX;
+        float percentZ = (position.z + halfBoardZ) / boardZ;
+
+        percentX = Mathf.Clamp01(percentX);
+        percentZ = Mathf.Clamp01(percentZ);
+
+        int x = Mathf.RoundToInt((boardX - 1) * percentX);
+        int z = Mathf.RoundToInt((boardZ - 1) * percentZ);
+
+        // Get oldPiece from that cordinate
+        Piece oldPiece = pieces[x, z];
+
+        // If there is an oldPiece in the slot curently
+        if (oldPiece != null)
+        {
+            // Swap Pieces
+            SwapPieces(piece, oldPiece);
+        }
+        else
+        {
+            // Place Pieces
+            int oldX = piece.gridX;
+            int oldZ = piece.gridZ;
+            pieces[oldX, oldZ] = null;
+            PlacePiece(piece, x, z);
+        }
+    }
+
+    void SwapPieces(Piece pieceA, Piece pieceB)
+    {
+        // Check if pieceA or pieceB is null
+        if (pieceA == null || pieceB == null)
+        {
+            return; // Exit the function
+        }
+        // pieceA grid pos
+        int pAX = pieceA.gridX;
+        int pAZ = pieceA.gridZ;
+        // pieceB grid pos
+        int pBX = pieceB.gridX;
+        int pBZ = pieceB.gridZ;
+        // Swap pieces
+        PlacePiece(pieceA, pBX, pBZ);
+        PlacePiece(pieceB, pAX, pAZ);
     }
 
     // Update is called once per frame
